@@ -16,10 +16,6 @@
                     class="img-fluid w-100 h-100" style="object-fit: cover; max-height: 200px;" alt="Room Image">
                 <div class="position-absolute bottom-0 start-0 bg-dark bg-opacity-50 w-100 p-3 text-white">
                     <h3 class="mb-0">{{ $reservation->room->room_type }}</h3>
-                    <small class="d-block mt-1">
-                        <i class="bi bi-geo-alt"></i>
-                        {{ $reservation->room->location ?? 'Lokasi tidak tersedia' }}
-                    </small>
                 </div>
             @else
                 <div class="bg-light w-100 h-100 d-flex align-items-center justify-content-center">
@@ -38,19 +34,27 @@
                 <strong>Menunggu Konfirmasi!</strong> Reservasi Anda masih dalam proses verifikasi.
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
-        @elseif($reservation->status === 'paid')
-            <div class="alert alert-success alert-dismissible fade show mb-4">
-                <i class="bi bi-check-circle-fill me-2"></i>
-                <strong>Reservasi Dikonfirmasi!</strong> Anda dapat melakukan check-in pada tanggal yang ditentukan.
+
+            {{-- Jika pending, user bisa upload bukti pembayaran --}}
+            <form action="{{ route('user.reservations.confirmPayment', $reservation->reservation_id) }}" method="POST"
+                enctype="multipart/form-data">
+                @csrf
+                <div class="mb-3">
+                    <label for="payment_proof" class="form-label">Upload Bukti Pembayaran</label>
+                    <input type="file" name="payment_proof" id="payment_proof" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Kirim Bukti Pembayaran</button>
+            </form>
+        @else
+            <div class="alert alert-info alert-dismissible fade show mb-4">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                <strong>Status Reservasi:</strong> {{ ucfirst($reservation->status) }}.
+                <br>Jika ada perubahan, silakan hubungi resepsionis.
                 <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
             </div>
         @endif
 
-        @if ($reservation->status === 'pending')
-            <a href="{{ route('user.reservations.pay', $reservation->reservation_id) }}" class="btn btn-primary">
-                <i class="bi bi-credit-card me-1"></i> Bayar Sekarang
-            </a>
-        @endif
+
 
         {{-- Detail Reservasi --}}
         <div class="card shadow-sm mb-4">
@@ -159,7 +163,7 @@
                     </form>
                 @endif
 
-                @if ($reservation->status === 'checkin')
+                @if ($reservation->status === 'paid' || $reservation->status === 'checkin')
                     <a href="{{ route('user.reservations.pdf', $reservation->reservation_id) }}" target="_blank"
                         class="btn btn-primary">
                         <i class="bi bi-file-earmark-pdf me-1"></i> Unduh PDF

@@ -5,18 +5,19 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class RoomFacility extends Model
+class pay extends Model
 {
     use HasFactory;
-    protected $table = 'room_facilities';
+    protected $table = 'pays';
     protected $primarykey = 'id';
     public $incrementing = true;
     protected $fillable = [
-        'rooms_id',
-        'facility_name',
+        'id',
+        'reservation_id',
+        'image'
     ];
-    public function room()
+    public function reservation()
     {
-        return $this->belongsTo(Room::class, 'rooms_id');
+        return $this->belongsTo(Reservation::class, 'reservation_id');
     }
 }

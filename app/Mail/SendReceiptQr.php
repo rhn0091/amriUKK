@@ -24,7 +24,7 @@ class SendReceiptQr extends Mailable
     {
         $qr = base64_encode(QrCode::format('png')->size(200)->generate($this->qrUrl));
 
-        return $this->subject('QR Code Konfirmasi Reservasi')
+        return $this->subject('Hotel Hebat')
             ->view('emails.receipt')
             ->with(['receipt' => $this->receipt, 'qr' => $qr]);
     }

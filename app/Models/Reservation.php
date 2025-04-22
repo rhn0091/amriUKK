@@ -40,14 +40,13 @@ class Reservation extends Model
         parent::boot();
 
         static::creating(function ($model) {
-            if (empty($model->reservation_id)) { // Pastikan pakai reservation_id, bukan id
+            if (empty($model->reservation_id)) {
                 $model->reservation_id = (string) Str::uuid();
             }
         });
     }
 
 
-    // Relasi dengan User
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -55,6 +54,6 @@ class Reservation extends Model
 
     public function room()
     {
-        return $this->belongsTo(Room::class, 'rooms_id'); // Ganti dari rooms_id ke room_id
+        return $this->belongsTo(Room::class, 'rooms_id');
     }
 }

@@ -24,12 +24,11 @@
                                 {{ $room->room_type }}
                             </h5>
                             
-                            {{-- Indikator Ketersediaan --}}
                             <div class="mb-2">
                                 @if($room->total_room > 0)
                                     <span class="badge bg-success">
                                         <i class="bi bi-check-circle me-1"></i>
-                                        Tersedia
+                                        Tersedia ({{ $room->total_room}})
                                     </span>
                                 @else
                                     <span class="badge bg-danger">
@@ -49,19 +48,18 @@
                                 <span class="badge bg-warning text-dark">{{ $room->capacity }} orang</span>
                             </p>
                             
-                            {{-- Fasilitas (jika ada) --}}
-                            {{-- @if($room->facilities->count())
+                            @if($room->facilities->count())
                                 <p class="card-text mb-2">
                                     <i class="bi bi-star-fill me-1 text-info"></i>
                                     <strong>Fasilitas:</strong>
                                     @foreach($room->facilities->take(2) as $facility)
-                                        <span class="badge bg-info me-1">{{ $facility->name }}</span>
+                                        <span class="badge bg-info me-1">{{ $facility->facility_name }}</span>
                                     @endforeach
                                     @if($room->facilities->count() > 2)
                                         <span class="badge bg-light text-dark">+{{ $room->facilities->count() - 2 }} lagi</span>
                                     @endif
                                 </p>
-                            @endif --}}
+                            @endif
                             
                             <div class="d-flex justify-content-between align-items-center mt-3">
                                 <a href="{{ route('user.show', $room->rooms_id) }}" class="btn btn-outline-primary btn-sm">

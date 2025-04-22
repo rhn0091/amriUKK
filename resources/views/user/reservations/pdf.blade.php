@@ -82,7 +82,7 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>Detail Reservasi</h1>
+            <h1>Detail Pembayaran</h1>
         </div>
 
         @php

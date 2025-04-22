@@ -2,28 +2,33 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Room;
-use App\Models\RoomFacility;
 use Illuminate\Http\Request;
+use App\Models\RoomFacility;
+use App\Models\Room;
+use Illuminate\Support\Str;
 
 class RoomFacilityController extends Controller
 {
     public function index()
     {
         $facilities = RoomFacility::all();
-        return view('user.room_facility.index', compact('facilities'));
+        return view('admin.room_facility.index', compact('facilities'));
     }
-    public function AdminIndex()
+
+
+    public function adminIndex()
     {
         $rooms = Room::with('facilities')->get();
         $facilities = RoomFacility::all();
-        return view('admin.room_facility.index', compact('rooms','facilities'));
+        return view('admin.room_facility.index', compact('rooms', 'facilities'));
     }
 
-    public function create()
+
+    public function create(Request $request)
     {
         $rooms = Room::all();
-        return view('admin.room_facility.create',compact('rooms'));
+        $selectedRoomId = $request->query('rooms_id');
+        return view('admin.room_facility.create', compact('rooms' , 'selectedRoomId'));
     }
 
     public function store(Request $request)
@@ -33,31 +38,53 @@ class RoomFacilityController extends Controller
             'facility_name' => 'required|string',
         ]);
 
-        RoomFacility::created([
+        RoomFacility::create([
             'rooms_id' => $request->rooms_id,
-            'facility_name' => $request->facility_name,
+            'facility_name' => $request->facility_name
         ]);
-        
-        return redirect()->route('admin.facility_index')->with('success', 'Fasilitas berhasil ditambahkan.');
+
+        return redirect()->route('admin.room_facility.index')->with('success', 'Fasilitas berhasil ditambahkan.');
     }
 
-    public function show(RoomFacility $roomFacility)
+    public function edit($id)
     {
-        
+        $facility = RoomFacility::findOrFail($id);
+        $rooms = Room::all();
+        return view('admin.room_facility.update', compact('facility', 'rooms'));
     }
 
-    public function edit(RoomFacility $roomFacility)
+
+    public function update(Request $request, $id)
     {
-        
+        $request->validate([
+            'rooms_id' => 'required|exists:rooms,rooms_id',
+            'facility_name' => 'required|string',
+        ]);
+
+        $facility = RoomFacility::findOrFail($id);
+
+        $facility->update([
+            'rooms_id' => $request->rooms_id,
+            'facility_name' => $request->facility_name
+        ]);
+
+        return redirect()->route('admin.room_facility.index')->with('success', 'Fasilitas berhasil diperbarui.');
     }
 
-    public function update(Request $request, RoomFacility $roomFacility)
+
+    public function show($id)
     {
-        //
+        $room = Room::with('facilities', 'images')->findOrFail($id);
+        $facilities = $room->facilities;
+        return view('user.show', compact('room', 'facilities'));
     }
 
-    public function destroy(RoomFacility $roomFacility)
+    public function destroy($id)
     {
-        
+        $facility = RoomFacility::findOrFail($id);
+        $roomId = $facility->rooms_id;
+        $facility->delete();
+
+        return redirect()->route('admin.room_facility.index', $roomId)->with('success', 'Fasilitas berhasil dihapus.');
     }
 }

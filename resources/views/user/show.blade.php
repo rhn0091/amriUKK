@@ -62,7 +62,7 @@
     <div class="mt-5">
         <h3 class="fw-bold text-center text-primary mb-4">Fasilitas Kamar</h3>
         <div class="row row-cols-2 row-cols-md-3 row-cols-lg-4 g-4">
-            {{-- @forelse ($room->facilities as $facility)
+            @forelse ($room->facilities as $facility)
                 <div class="col">
                     <div class="card border-0 shadow-sm p-3 text-center h-100 transition hover-shadow">
                         <i class="bi bi-check-circle-fill text-success fs-3 mb-2"></i>
@@ -71,7 +71,7 @@
                 </div>
             @empty
                 <div class="col text-center text-muted">Tidak ada fasilitas terdaftar.</div>
-            @endforelse --}}
+            @endforelse
         </div>
     </div>
 

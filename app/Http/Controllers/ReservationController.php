@@ -3,15 +3,16 @@
 namespace App\Http\Controllers;
 
 use App\Models\Room;
+use App\Models\Pay;
 use App\Models\Receipt;
-use App\Mail\SendReceiptQr;
+// use App\Mail\SendReceiptQr;
 use App\Models\Reservation;
 use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Mail;
+// use Illuminate\Support\Facades\Mail;
 
 class ReservationController extends Controller
 {
@@ -70,10 +71,8 @@ class ReservationController extends Controller
                 'status' => 'pending',
             ]);
 
-            // Kurangi stok kamar
             $room->decrement('total_room', $request->total_rooms);
 
-            // Buat receipt
             $receipt = Receipt::create([
                 'id' => Str::uuid(),
                 'reservation_id' => $reservation->reservation_id,
@@ -88,8 +87,6 @@ class ReservationController extends Controller
         }
 
         return redirect()->route('user.reservations.show', $reservation->reservation_id);
-        // ->with('success', 'Pemesanan berhasil dibuat. QR Code sudah dikirim ke email kamu.')
-        // ->with('qr_url', $qrUrl);
     }
 
     public function show($reservation_id)
@@ -113,7 +110,7 @@ class ReservationController extends Controller
 
         $receipt = Receipt::where('reservation_id', $reservation_id)->firstOrFail();
 
-        $qr_url = route('scan.qr.confirm', $receipt->id); 
+        $qr_url = route('scan.qr.confirm', $receipt->id);
 
         return view('user.reservations.pay', compact('reservation', 'receipt', 'qr_url'));
     }
@@ -122,30 +119,42 @@ class ReservationController extends Controller
     {
         $reservation = Reservation::with('room')->where('reservation_id', $reservation_id)->firstOrFail();
 
-        if ($reservation->status === 'pending') {
-            $reservation->update(['status' => 'paid']);
-
-            $qr_url = route('scan.qr.checkin', $reservation->reservation_id);
-            Mail::to($reservation->user->email)->send(new SendReceiptQr($reservation, $qr_url));
-        }
-
-        return redirect()->route('user.reservations.show', $reservation_id)->with('success', 'Pembayaran berhasil! QR Check-in dikirim ke email.');
-    }
-
-    public function update(Request $request, $reservation_id)
-    {
-        $reservation = Reservation::where('user_id', Auth::id())
-            ->where('reservation_id', $reservation_id)
-            ->firstOrFail();
-
         $request->validate([
-            'status' => 'required|in:pending,paid,cancelled,checked_out',
+            'payment_proof' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048'
         ]);
 
-        $reservation->update(['status' => $request->status]);
+        if ($request->hasFile('payment_proof')) {
+            $image = $request->file('payment_proof');
+            $filename = time() . '_' . $image->getClientOriginalName();
+            $path = $image->storeAs('public/payments', $filename);
 
-        return redirect()->route('user.reservations.index')->with('success', 'Status pemesanan diperbarui.');
+            Pay::create([
+                'reservation_id' => $reservation->reservation_id,
+                'image' => 'payments/' . $filename
+            ]);
+        }
+
+        return redirect()->route('user.reservations.show', $reservation_id)->with('success', 'Pembayaran berhasil! Bukti pembayaran berhasil diunggah.');
     }
+
+    public function update(Request $request, $id)
+    {
+        $reservation = Reservation::findOrFail($id);
+        $reservation->status = $request->status;
+        $reservation->save();
+
+        return redirect()->route('user.reservations.index')->with('success', 'Status reservasi berhasil diperbarui.');
+    }
+
+    public function updateRecepsionist(Request $request, $id)
+    {
+        $reservation = Reservation::findOrFail($id);
+        $reservation->status = $request->status;
+        $reservation->save();
+
+        return redirect()->route('receptionist.dashboard')->with('success', 'Status reservasi berhasil diperbarui.');
+    }
+
 
     public function destroy($reservation_id)
     {
@@ -184,15 +193,15 @@ class ReservationController extends Controller
         }
 
         return view('user.reservations.checkin_result', [
-            'message' => 'Reservasi belum dibayar atau tidak valid untuk check-in.',
+            'message' => 'Reservasi belum diproses oleh resepsionis.',
             'status' => 'error'
         ]);
     }
-    
+
     public function downloadPdf($id)
     {
         $reservation = Reservation::with('room.images')->findOrFail($id);
-    
+
         $checkIn = \Carbon\Carbon::parse($reservation->check_in);
         $checkOut = \Carbon\Carbon::parse($reservation->check_out);
         $nights = $checkIn->diffInDays($checkOut);
@@ -201,5 +210,41 @@ class ReservationController extends Controller
         $pdf = Pdf::loadView('user.reservations.pdf', compact('reservation', 'checkIn', 'checkOut', 'nights', 'totalPrice'));
 
         return $pdf->download('reservasi-' . $reservation->reservation_id . '.pdf');
+    }
+
+    public function history()
+    {
+        $reservation = Reservation::where('user_id', Auth::id())
+            ->whereIn('status', ['cancelled', 'checked_out'])
+            ->with('room')
+            ->orderBy('check_out_date', 'desc')
+            ->paginate(10);
+
+        return view('user.reservations.history', compact('reservation'));
+    }
+
+    public function rebook($id)
+    {
+        $reservation = Reservation::with('room')->findOrFail($id);
+        $rooms = Room::all();
+
+        return view('user.reservations.create', [
+            'rooms' => $rooms,
+            'selectedRoomId' => $reservation->rooms_id,
+            'check_in_date' => $reservation->check_in_date,
+            'check_out_date' => $reservation->check_out_date,
+        ]);
+    }
+    public function updateStatus(Request $request, $id)
+    {
+        $reservation = Reservation::findOrFail($id);
+
+        $request->validate([
+            'status' => 'required|in:pending,paid,checkin',
+        ]);
+
+        $reservation->update(['status' => $request->status]);
+
+        return redirect()->back()->with('success', 'Status berhasil diubah.');
     }
 }

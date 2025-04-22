@@ -18,7 +18,7 @@
         @if (!Auth::check() || Auth::user()->hasVerifiedEmail())
         <nav class="navbar navbar-expand-md navbar-light bg-white shadow-sm">
             <div class="container">
-                <a class="navbar-brand d-flex align-items-center" href="{{ url('/') }}">
+                <a class="navbar-brand d-flex align-items-center" href="{{ url('/rooms') }}">
                     <img src="{{ asset('assets/images/wikrama.png') }}" alt="Logo" class="me-2">
                     <h1>Hotel Hebat</h1>
                 </a>
@@ -51,27 +51,20 @@
                                 </h5>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="{{ route('user.reservations.index') }}">
-                                    <i class="bi bi-calendar-check-fill me-1"></i> Reservasi
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link" href="{{ route('user.index') }}">
+                                <a class="nav-link {{ request()->routeIs('user.index') ? 'active text-primary fw-bold' : '' }}" href="{{ route('user.index') }}">
                                     <i class="bi bi-door-open-fill me-1"></i> Kamar
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link" href="">
-                                    <i class="bi bi-building-fill me-1"></i> Fasilitas Hotel
+                                <a class="nav-link {{ request()->routeIs('user.reservations.index') ? 'active text-primary fw-bold' : '' }}" href="{{ route('user.reservations.index') }}">
+                                    <i class="bi bi-calendar-check-fill me-1"></i> Reservasi
                                 </a>
                             </li>
                             <li class="nav-item">
-                                <a class="nav-link text-danger" href="{{ route('logout') }}"
-                                   onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-                                    <i class="bi bi-box-arrow-right me-1"></i> Logout
+                                <a class="nav-link {{ request()->routeIs('user.hotel_facility.index') ? 'active text-primary fw-bold' : '' }}" href="{{ route('user.hotel_facility.index') }}">
+                                    <i class="bi bi-building-fill me-1"></i> Fasilitas Hotel
                                 </a>
-                            </li>
-
+                            </li>                            
                             <form id="logout-form" action="{{ route('logout') }}" method="POST" class="d-none">
                                 @csrf
                             </form>

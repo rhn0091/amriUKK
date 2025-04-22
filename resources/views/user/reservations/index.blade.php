@@ -2,7 +2,7 @@
 
 @section('content')
     <div class="container mt-5">
-        <a href="" class="btn btn-light border d-inline-flex align-items-center mb-4 shadow-sm">
+        <a href="{{route('user.reservations.history')}}" class="btn btn-light border d-inline-flex align-items-center mb-4 shadow-sm">
             <i class="bi bi-clock-history me-2 text-primary"></i> <span class="text-primary fw-semibold">Lihat Riwayat Reservasi</span>
         </a>
         
@@ -59,7 +59,7 @@
                     </div>
                 </div>
             </div>
-        @empty
+            @empty
             <div class="text-center text-muted py-5">
                 <i class="bi bi-calendar-x fs-1 mb-3 d-block"></i>
                 <p class="mb-0">Belum ada reservasi yang dibuat.</p>
